@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mortgage Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #f5f5f5;
+            padding: 0;
+            line-height: 1.6;
+        }
+
+        .header {
+            background: #2563eb;
+            color: white;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .container {
+            max-width: 420px;
+            margin: 0 auto;
+            padding: 1rem;
+            padding-bottom: 5rem;
+        }
+
+        .section {
+            background: white;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: #1f2937;
+        }
+
+        .input-group {
+            margin-bottom: 1rem;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            color: #374151;
+        }
+
+        .input-group input[type="text"],
+        .input-group input[type="date"],
+        .input-group input[type="number"] {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        .slider-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .slider-value {
+            color: #2563eb;
+            font-weight: 600;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e5e7eb;
+            outline: none;
+            -webkit-appearance: none;
+            touch-action: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2563eb;
+            cursor: pointer;
+            border: none;
+        }
+
+        .cash-bar {
+            height: 8px;
+            background: #e5e7eb;
+            border-radius: 4px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .cash-fill {
+            height: 100%;
+            background: #10b981;
+            transition: width 0.3s ease;
+        }
+
+        .presets {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            gap: 0.5rem;
+            padding: 0.75rem;
+            background: white;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.12);
+            z-index: 100;
+            justify-content: center;
+        }
+
+        .preset-btn {
+            padding: 0.5rem 0.75rem;
+            background: #f3f4f6;
+            border: 2px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.7rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn.active {
+            background: #2563eb;
+            color: white;
+            border-color: #2563eb;
+        }
+
+        .preset-btn:active {
+            transform: scale(0.98);
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+
+        .result-card {
+            background: #f9fafb;
+            padding: 1rem;
+            border-radius: 6px;
+            border-left: 4px solid #2563eb;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            color: #6b7280;
+            margin-bottom: 0.25rem;
+        }
+
+        .result-value {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .result-card.highlight {
+            border-left-color: #10b981;
+        }
+
+        .result-card.highlight .result-value {
+            color: #10b981;
+        }
+
+        .chart-container {
+            margin-bottom: 1.5rem;
+            position: relative;
+            height: 250px;
+        }
+
+        .chart-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            color: #374151;
+        }
+
+        @media (max-width: 420px) {
+            .container {
+                padding: 0.5rem;
+            }
+
+            .section {
+                padding: 1rem;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Mortgage Calculator</h1>
+        <p>Prepayment & Budget Planner</p>
+    </div>
+
+    <div class="container">
+        <div class="section">
+            <div class="section-title">Loan Information</div>
+
+            <div class="input-group">
+                <label for="balance">Current Balance</label>
+                <input type="text" id="balance">
+            </div>
+
+            <div class="input-group">
+                <label for="payment">Monthly P&I Payment</label>
+                <input type="text" id="payment">
+            </div>
+
+            <div class="input-group">
+                <label for="date">Balance As-Of Date</label>
+                <input type="date" id="date">
+            </div>
+
+            <div id="derived-info" style="margin-top:0.75rem;padding:0.75rem;background:#f3f4f6;border-radius:6px;font-size:0.85rem;color:#6b7280;"></div>
+        </div>
+
+        <div class="section">
+            <div class="section-title">Scenario</div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>Extra Mortgage Payment</span>
+                    <span class="slider-value" id="mortgage-value">$0</span>
+                </div>
+                <input type="range" id="mortgage-slider" min="0" max="2000" value="0" step="10">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>401(k) Contribution</span>
+                    <span class="slider-value" id="401k-value">$1,000</span>
+                </div>
+                <input type="range" id="401k-slider" min="0" max="1958" value="1000" step="10">
+            </div>
+
+            <div class="slider-group">
+                <div class="slider-label">
+                    <span>Monthly Cash Freed Up</span>
+                    <span class="slider-value" id="cash-value" style="color:#10b981;">$0</span>
+                </div>
+                <div class="cash-bar">
+                    <div class="cash-fill" id="cash-fill"></div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="section">
+            <div class="section-title">Results</div>
+
+            <div class="results-grid">
+                <div class="result-card">
+                    <div class="result-label">Payoff Date</div>
+                    <div class="result-value" id="result-payoff">--</div>
+                </div>
+                <div class="result-card highlight">
+                    <div class="result-label">Months Saved</div>
+                    <div class="result-value" id="result-saved">--</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Total Interest</div>
+                    <div class="result-value" id="result-interest">--</div>
+                </div>
+                <div class="result-card highlight">
+                    <div class="result-label">Interest Saved</div>
+                    <div class="result-value" id="result-interest-saved">--</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">401(k) Value</div>
+                    <div class="result-value" id="result-401k">--</div>
+                </div>
+                <div class="result-card">
+                    <div class="result-label">Cash Saved</div>
+                    <div class="result-value" id="result-cash">--</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="chart-title">Balance Over Time</div>
+            <div class="chart-container">
+                <canvas id="balance-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="chart-title">Monthly Payment Breakdown</div>
+            <div class="chart-container">
+                <canvas id="breakdown-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="chart-title">Wealth Comparison</div>
+            <div class="chart-container">
+                <canvas id="wealth-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="section" style="font-size:0.8rem;color:#6b7280;line-height:1.5;">
+            <div class="section-title" style="font-size:0.9rem;">Notes</div>
+            <ul style="padding-left:1.2rem;display:flex;flex-direction:column;gap:0.4rem;">
+                <li>401(k) projections show <strong>new growth only</strong> from monthly contributions &mdash; existing 401(k) balances are not included.</li>
+                <li>The Balance Over Time chart uses a <strong>log scale</strong> so you can see the difference between payoff curves clearly, even when the gap is small relative to the total balance.</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="presets" id="presets"></div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        function p(key, fallback) { return Number(params.get(key)) || fallback; }
+
+        const RATE = (Number(params.get('rate')) || 0) / 100;
+        const MONTHLY_RATE = RATE / 12;
+        const TERM_MONTHS = 180;
+        const FOURK_MAX = 1958;
+        const FOURK_RETURN = 0.07;
+        const MONTHLY_FOURK_RETURN = Math.pow(1 + FOURK_RETURN, 1/12) - 1;
+
+        const DEFAULT_BALANCE = p('bal', 300000);
+        const DEFAULT_PAYMENT = p('pmt', 2000);
+        const CURRENT_MORTGAGE_EXTRA = p('extra', 0);
+        const CURRENT_FOURK = p('fourk', 1000);
+        const MAX_EXTRA = p('max_extra', 2000);
+
+        let balanceChart, breakdownChart, wealthChart;
+
+        const elements = {
+            balance: document.getElementById('balance'),
+            payment: document.getElementById('payment'),
+            date: document.getElementById('date'),
+            mortgageSlider: document.getElementById('mortgage-slider'),
+            fourkSlider: document.getElementById('401k-slider'),
+            mortgageValue: document.getElementById('mortgage-value'),
+            fourkValue: document.getElementById('401k-value'),
+            cashValue: document.getElementById('cash-value'),
+            cashFill: document.getElementById('cash-fill')
+        };
+
+        function monthlyPayment(principal, r, n) {
+            if (r === 0) return principal / n;
+            return principal * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+        }
+
+        function remainingMonths(currentBalance, monthlyPI) {
+            if (monthlyPI <= currentBalance * MONTHLY_RATE) return Infinity;
+            return Math.ceil(-Math.log(1 - (currentBalance * MONTHLY_RATE / monthlyPI)) / Math.log(1 + MONTHLY_RATE));
+        }
+
+        function amortizationSchedule(startingBalance, basePayment, extraMonthly) {
+            const schedule = [];
+            let balance = startingBalance;
+            let month = 0;
+
+            while (balance > 0.01 && month < TERM_MONTHS * 2) {
+                const interest = balance * MONTHLY_RATE;
+                const principalPayment = Math.min(basePayment - interest, balance);
+                const extra = Math.min(extraMonthly, balance - principalPayment);
+                const totalPrincipal = principalPayment + Math.max(0, extra);
+
+                balance -= totalPrincipal;
+
+                schedule.push({
+                    month: month + 1,
+                    balance: Math.max(0, balance),
+                    interest,
+                    principal: principalPayment,
+                    extra
+                });
+
+                month++;
+            }
+
+            return schedule;
+        }
+
+        function project401k(monthlyContribution, months) {
+            let balance = 0;
+            for (let i = 0; i < months; i++) {
+                balance = balance * (1 + MONTHLY_FOURK_RETURN) + monthlyContribution;
+            }
+            return balance;
+        }
+
+        function runScenario(currentBalance, monthlyPI, extraMortgage, fourkContribution, cashMonthly) {
+            const baseline = amortizationSchedule(currentBalance, monthlyPI, 0);
+            const withExtra = amortizationSchedule(currentBalance, monthlyPI, extraMortgage);
+
+            const baselineInterest = baseline.reduce((sum, m) => sum + m.interest, 0);
+            const withExtraInterest = withExtra.reduce((sum, m) => sum + m.interest, 0);
+
+            const fourkValue = project401k(fourkContribution, baseline.length);
+            const cashAccumulated = cashMonthly * baseline.length;
+
+            return {
+                baseline,
+                withExtra,
+                monthsSaved: baseline.length - withExtra.length,
+                interestSaved: baselineInterest - withExtraInterest,
+                totalInterest: withExtraInterest,
+                fourkValue,
+                cashAccumulated
+            };
+        }
+
+        function formatCurrency(value) {
+            if (value >= 1000000) {
+                return '$' + (value / 1000000).toFixed(1) + 'M';
+            } else if (value >= 100000) {
+                return '$' + Math.round(value / 1000) + 'k';
+            } else if (value >= 10000) {
+                return '$' + (value / 1000).toFixed(1) + 'k';
+            } else {
+                return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            }
+        }
+
+        function formatBalanceInput(input) {
+            let value = input.value.replace(/[^0-9]/g, '');
+            if (value) {
+                const num = parseInt(value);
+                input.value = '$' + num.toLocaleString('en-US');
+            }
+        }
+
+        function parseBalance(str) {
+            return parseInt(str.replace(/[^0-9]/g, '') || '0');
+        }
+
+        function updateSliders() {
+            const mortgage = parseInt(elements.mortgageSlider.value);
+            const fourk = parseInt(elements.fourkSlider.value);
+
+            const currentTotal = CURRENT_MORTGAGE_EXTRA + CURRENT_FOURK;
+            const newTotal = mortgage + fourk;
+            const cashFreed = Math.max(0, currentTotal - newTotal);
+
+            elements.mortgageValue.textContent = formatCurrency(mortgage);
+            elements.fourkValue.textContent = formatCurrency(fourk);
+            elements.cashValue.textContent = '+' + formatCurrency(cashFreed) + '/mo';
+
+            const maxFreed = currentTotal;
+            elements.cashFill.style.width = (maxFreed > 0 ? (cashFreed / maxFreed) * 100 : 0) + '%';
+
+            calculate();
+        }
+
+        function calculate() {
+            if (RATE === 0) {
+                document.getElementById('derived-info').innerHTML =
+                    '<strong style="color:#ef4444">Missing rate parameter.</strong> Add <code>?rate=4.875</code> to the URL.';
+                return;
+            }
+            const balance = parseBalance(elements.balance.value);
+            const mortgage = parseInt(elements.mortgageSlider.value);
+            const fourk = parseInt(elements.fourkSlider.value);
+            const currentTotal = CURRENT_MORTGAGE_EXTRA + CURRENT_FOURK;
+            const cashFreed = Math.max(0, currentTotal - mortgage - fourk);
+
+            if (balance <= 0) return;
+
+            const monthlyPI = parseBalance(elements.payment.value);
+            if (monthlyPI <= 0) return;
+
+            const remaining = remainingMonths(balance, monthlyPI);
+            if (remaining <= 0 || !isFinite(remaining)) {
+                document.getElementById('result-payoff').textContent = 'Paid Off';
+                document.getElementById('result-saved').textContent = '0';
+                document.getElementById('result-interest').textContent = '$0';
+                document.getElementById('result-interest-saved').textContent = '$0';
+                document.getElementById('result-401k').textContent = '$0';
+                document.getElementById('result-cash').textContent = '$0';
+                return;
+            }
+
+            document.getElementById('derived-info').innerHTML =
+                'Rate: ' + (RATE * 100).toFixed(3) + '% · 15-year · P&I: <strong style="color:#1f2937">$' +
+                Math.round(monthlyPI).toLocaleString() + '/mo</strong> · ' +
+                remaining + ' months remaining';
+
+            const result = runScenario(balance, monthlyPI, mortgage, fourk, cashFreed);
+
+            const startDate = new Date(elements.date.value);
+            const payoffDate = new Date(startDate);
+            payoffDate.setMonth(payoffDate.getMonth() + result.withExtra.length);
+
+            const payoffStr = payoffDate.toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+
+            document.getElementById('result-payoff').textContent = payoffStr;
+            document.getElementById('result-saved').textContent = result.monthsSaved;
+            document.getElementById('result-interest').textContent = formatCurrency(result.totalInterest);
+            document.getElementById('result-interest-saved').textContent = formatCurrency(result.interestSaved);
+            document.getElementById('result-401k').textContent = formatCurrency(result.fourkValue);
+            document.getElementById('result-cash').textContent = formatCurrency(result.cashAccumulated);
+
+            updateCharts(result, startDate);
+        }
+
+        function updateCharts(result, startDate) {
+            const sampleRate = Math.max(1, Math.floor(result.baseline.length / 24));
+
+            const maxMonths = result.baseline.length;
+            const monthLabels = Array.from({ length: maxMonths }, (_, i) => {
+                const d = new Date(startDate);
+                d.setMonth(d.getMonth() + i);
+                return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+            });
+
+            const extraBalances = result.withExtra.map(m => m.balance);
+            while (extraBalances.length < maxMonths) extraBalances.push(0);
+
+            if (balanceChart) balanceChart.destroy();
+            balanceChart = new Chart(document.getElementById('balance-chart'), {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: [
+                        {
+                            label: 'Baseline',
+                            data: result.baseline.map(m => m.balance),
+                            borderColor: '#9ca3af',
+                            backgroundColor: 'transparent',
+                            fill: false,
+                            tension: 0.1,
+                            pointRadius: 0
+                        },
+                        {
+                            label: 'With Extra Payments',
+                            data: extraBalances,
+                            borderColor: '#2563eb',
+                            backgroundColor: 'rgba(37, 99, 235, 0.1)',
+                            fill: '-1',
+                            tension: 0.1,
+                            pointRadius: 0
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'bottom' }
+                    },
+                    scales: {
+                        x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6, font: { size: 10 } } },
+                        y: {
+                            type: 'logarithmic',
+                            min: 1000,
+                            ticks: {
+                                callback: value => formatCurrency(value)
+                            }
+                        }
+                    }
+                }
+            });
+
+            const breakdownSamples = result.withExtra.filter((m, i) => i % sampleRate === 0);
+            const breakdownLabels = breakdownSamples.map(m => {
+                const d = new Date(startDate);
+                d.setMonth(d.getMonth() + m.month - 1);
+                return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+            });
+
+            if (breakdownChart) breakdownChart.destroy();
+            breakdownChart = new Chart(document.getElementById('breakdown-chart'), {
+                type: 'bar',
+                data: {
+                    labels: breakdownLabels,
+                    datasets: [
+                        {
+                            label: 'Principal',
+                            data: breakdownSamples.map(m => m.principal),
+                            backgroundColor: '#2563eb'
+                        },
+                        {
+                            label: 'Interest',
+                            data: breakdownSamples.map(m => m.interest),
+                            backgroundColor: '#ef4444'
+                        },
+                        {
+                            label: 'Extra',
+                            data: breakdownSamples.map(m => m.extra),
+                            backgroundColor: '#10b981'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'bottom' }
+                    },
+                    scales: {
+                        x: { stacked: true, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 8, font: { size: 10 } } },
+                        y: {
+                            stacked: true,
+                            ticks: {
+                                callback: value => formatCurrency(value)
+                            }
+                        }
+                    }
+                }
+            });
+
+            const fourk = parseInt(elements.fourkSlider.value);
+            const mortgage = parseInt(elements.mortgageSlider.value);
+            const currentTotal = CURRENT_MORTGAGE_EXTRA + CURRENT_FOURK;
+            const cash = Math.max(0, currentTotal - mortgage - fourk);
+
+            const fourkValues = Array.from({ length: maxMonths }, (_, i) => project401k(fourk, i + 1));
+            const cashValues = Array.from({ length: maxMonths }, (_, i) => cash * (i + 1));
+            let cumSaved = 0;
+            const interestSaved = Array.from({ length: maxMonths }, (_, i) => {
+                const baseInt = result.baseline[i] ? result.baseline[i].interest : 0;
+                const extraInt = result.withExtra[i] ? result.withExtra[i].interest : 0;
+                cumSaved += baseInt - extraInt;
+                return cumSaved;
+            });
+
+            if (wealthChart) wealthChart.destroy();
+            wealthChart = new Chart(document.getElementById('wealth-chart'), {
+                type: 'line',
+                data: {
+                    labels: monthLabels,
+                    datasets: [
+                        {
+                            label: '401(k) Value',
+                            data: fourkValues,
+                            borderColor: '#8b5cf6',
+                            backgroundColor: 'transparent',
+                            tension: 0.1
+                        },
+                        {
+                            label: 'Interest Saved',
+                            data: interestSaved,
+                            borderColor: '#f59e0b',
+                            backgroundColor: 'transparent',
+                            tension: 0.1
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: true, position: 'bottom' }
+                    },
+                    scales: {
+                        x: { ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6, font: { size: 10 } } },
+                        y: {
+                            type: 'logarithmic',
+                            min: 100,
+                            ticks: {
+                                callback: value => formatCurrency(value)
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        elements.balance.addEventListener('blur', e => formatBalanceInput(e.target));
+        elements.balance.addEventListener('input', calculate);
+        elements.payment.addEventListener('blur', e => formatBalanceInput(e.target));
+        elements.payment.addEventListener('input', calculate);
+        elements.date.addEventListener('change', calculate);
+
+        elements.mortgageSlider.addEventListener('input', updateSliders);
+        elements.fourkSlider.addEventListener('input', updateSliders);
+
+        const PRESETS = [
+            { id: 'current', label: 'Current', mortgage: CURRENT_MORTGAGE_EXTRA, fourk: CURRENT_FOURK },
+            { id: 'max401k', label: 'Max 401(k)', mortgage: CURRENT_MORTGAGE_EXTRA, fourk: FOURK_MAX },
+            { id: 'aggressive', label: 'Aggressive', mortgage: MAX_EXTRA, fourk: CURRENT_FOURK },
+            { id: 'morecash', label: 'More Cash', mortgage: 500, fourk: CURRENT_FOURK }
+        ];
+
+        const presetsContainer = document.getElementById('presets');
+        PRESETS.forEach(preset => {
+            const btn = document.createElement('button');
+            btn.className = 'preset-btn';
+            btn.dataset.preset = preset.id;
+            btn.innerHTML = preset.label + '<br>($' + preset.mortgage.toLocaleString() + ' / $' + preset.fourk.toLocaleString() + ')';
+            btn.addEventListener('click', () => {
+                presetsContainer.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                elements.mortgageSlider.value = preset.mortgage;
+                elements.fourkSlider.value = preset.fourk;
+                updateSliders();
+            });
+            presetsContainer.appendChild(btn);
+        });
+
+        elements.balance.value = '$' + DEFAULT_BALANCE.toLocaleString();
+        elements.payment.value = '$' + DEFAULT_PAYMENT.toLocaleString();
+        elements.mortgageSlider.value = CURRENT_MORTGAGE_EXTRA;
+        elements.mortgageSlider.max = MAX_EXTRA;
+        elements.fourkSlider.value = CURRENT_FOURK;
+        elements.date.valueAsDate = new Date();
+        updateSliders();
+    </script>
+</body>
+</html>
